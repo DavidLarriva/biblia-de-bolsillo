@@ -1,0 +1,29 @@
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-bg-base text-text-primary font-sans;
+  }
+}
+
+@layer components {
+  .verse-insert {
+    @apply border-l-2 border-accent pl-3 my-2;
+  }
+
+  .verse-insert p {
+    @apply font-voice italic text-text-primary;
+  }
+
+  .verse-insert cite {
+    @apply not-italic text-sm text-text-muted;
+  }
+}
