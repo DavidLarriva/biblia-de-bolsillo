@@ -5,7 +5,6 @@ import { useReadingProgress } from '../../hooks/useReadingProgress'
 import { useBibleVersion } from '../../hooks/useBibleVersion'
 import { useChapterText } from '../../hooks/useChapterText'
 import BibleVersionToggle from '../../components/BibleVersionToggle'
-import VerseFormModal from '../../components/VerseFormModal'
 import { SkeletonList } from '../../components/Skeleton'
 import { BibleApiError, describeBibleError } from '../../lib/bibleApi'
 import { describeSupabaseError } from '../../lib/errors'
@@ -63,7 +62,6 @@ function getHighlightedChapter(bookProgress) {
 function ChapterText({ book, chapter }) {
   const { version } = useBibleVersion()
   const { data, isLoading, isError, error } = useChapterText(version, book.usfm_code, chapter)
-  const [noteVerse, setNoteVerse] = useState(null)
 
   // Distingue un fallo de red (BibleApiError con status null) de una respuesta
   // 400/404 del servidor; en ambos casos se puede seguir marcando la lectura.
@@ -89,36 +87,14 @@ function ChapterText({ book, chapter }) {
       )}
 
       {data && (
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-2">
           {data.map((verso) => (
-            <div key={verso.versiculo} className="flex items-start gap-2">
-              <p className="font-voice text-text-primary leading-relaxed flex-1">
-                <span className="text-text-muted text-sm mr-2">{verso.versiculo}</span>
-                {verso.texto}
-              </p>
-              <button
-                type="button"
-                onClick={() => setNoteVerse(verso)}
-                className="shrink-0 mt-1 text-xs text-text-muted hover:text-accent"
-                aria-label={`Anotar versículo ${verso.versiculo}`}
-              >
-                Anotar
-              </button>
-            </div>
+            <p key={verso.versiculo} className="font-voice text-text-primary leading-relaxed">
+              <span className="text-text-muted text-sm mr-2">{verso.versiculo}</span>
+              {verso.texto}
+            </p>
           ))}
         </div>
-      )}
-
-      {noteVerse && (
-        <VerseFormModal
-          mode="create"
-          initialValues={{
-            reference: `${book.name} ${chapter}:${noteVerse.versiculo}`,
-            verseText: noteVerse.texto,
-            bibleVersion: version,
-          }}
-          onClose={() => setNoteVerse(null)}
-        />
       )}
     </div>
   )
