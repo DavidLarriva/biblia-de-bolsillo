@@ -70,17 +70,22 @@ export default function AppLayout() {
         </div>
       </aside>
 
-      <header className="sm:hidden sticky top-0 z-20 flex items-center h-14 px-4 bg-bg-elevated border-b border-border-subtle">
-        <button
-          type="button"
-          aria-label="Abrir menú"
-          onClick={() => setDrawerOpen(true)}
-          className="p-2 -ml-2 text-text-primary"
-        >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path strokeLinecap="round" d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
+      <header
+        className="sm:hidden sticky top-0 z-20 bg-bg-elevated border-b border-border-subtle"
+        style={{ paddingTop: 'env(safe-area-inset-top)' }}
+      >
+        <div className="flex items-center h-14 px-4">
+          <button
+            type="button"
+            aria-label="Abrir menú"
+            onClick={() => setDrawerOpen(true)}
+            className="p-2 -ml-2 text-text-primary"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+        </div>
       </header>
 
       {drawerOpen && (
@@ -91,7 +96,13 @@ export default function AppLayout() {
             onClick={() => setDrawerOpen(false)}
             className="absolute inset-0 bg-black/60"
           />
-          <aside className="absolute inset-y-0 left-0 w-[220px] flex flex-col justify-between bg-bg-elevated py-4">
+          <aside
+            className="absolute inset-y-0 left-0 w-[220px] flex flex-col justify-between bg-bg-elevated py-4"
+            style={{
+              paddingTop: 'calc(env(safe-area-inset-top) + 1rem)',
+              paddingBottom: 'calc(env(safe-area-inset-bottom) + 1rem)',
+            }}
+          >
             <NavItems onNavigate={() => setDrawerOpen(false)} />
             <div className="px-3">
               <SignOutButton onSignedOut={() => setDrawerOpen(false)} />
