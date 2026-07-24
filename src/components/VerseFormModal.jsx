@@ -2,12 +2,7 @@ import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../context/AuthContext'
-import { useBibleVersion } from '../hooks/useBibleVersion'
-import { useBibleBooks } from '../hooks/useBibleBooks'
-import { bibleChapterQueryKey } from '../hooks/useBibleChapter'
-import { obtenerCapitulo, describeBibleError } from '../lib/bibleApi'
-import { parseReference } from '../lib/parseReference'
-import BibleVersionToggle from './BibleVersionToggle'
+import VerseSearchModal from './VerseSearchModal'
 
 const MEMORIZE_STATUSES = [
   { value: 'en_proceso', label: 'En proceso' },
@@ -17,8 +12,6 @@ const MEMORIZE_STATUSES = [
 export default function VerseFormModal({ mode, initialValues, existingVerse, onClose }) {
   const { user } = useAuth()
   const queryClient = useQueryClient()
-  const { version } = useBibleVersion()
-  const { data: bibleBooksList } = useBibleBooks()
 
   const [reference, setReference] = useState(
     existingVerse?.reference ?? initialValues?.reference ?? ''
@@ -36,8 +29,7 @@ export default function VerseFormModal({ mode, initialValues, existingVerse, onC
   const [memorizeStatus, setMemorizeStatus] = useState(
     existingVerse?.memorize_status ?? 'en_proceso'
   )
-  const [searchError, setSearchError] = useState('')
-  const [searching, setSearching] = useState(false)
+  const [searchModalOpen, setSearchModalOpen] = useState(false)
   const [formError, setFormError] = useState('')
 
   const tagsQuery = useQuery({
@@ -85,43 +77,11 @@ export default function VerseFormModal({ mode, initialValues, existingVerse, onC
     }
   }
 
-  async function handleSearch() {
-    setSearchError('')
-    const parsed = parseReference(reference, bibleBooksList ?? [])
-
-    if (!parsed) {
-      setSearchError(`No se reconoce el libro «${reference}»`)
-      return
-    }
-
-    if (parsed.verse == null) {
-      setSearchError('Indica también el número de versículo (ej. Juan 3:16).')
-      return
-    }
-
-    setSearching(true)
-    try {
-      const data = await queryClient.fetchQuery({
-        queryKey: bibleChapterQueryKey(version, parsed.book.usfm_code, parsed.chapter),
-        queryFn: () => obtenerCapitulo(version, parsed.book.usfm_code, parsed.chapter),
-        staleTime: Infinity,
-      })
-      const match = data.versiculos.find((v) => v.versiculo === parsed.verse)
-      if (match) {
-        setVerseText(match.texto)
-        setBibleVersion(version)
-      } else {
-        setVerseText('')
-        setBibleVersion(null)
-        setSearchError('No se encontró ese versículo.')
-      }
-    } catch (err) {
-      setVerseText('')
-      setBibleVersion(null)
-      setSearchError(describeBibleError(err))
-    } finally {
-      setSearching(false)
-    }
+  function handleSearchSelect({ referencia, texto, version }) {
+    setReference(referencia)
+    setVerseText(texto)
+    setBibleVersion(version)
+    setSearchModalOpen(false)
   }
 
   function invalidateVerseQueries() {
@@ -197,9 +157,18 @@ export default function VerseFormModal({ mode, initialValues, existingVerse, onC
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">
-            <label htmlFor="reference" className="text-sm text-text-secondary">
-              Referencia
-            </label>
+            <div className="flex items-center justify-between gap-3">
+              <label htmlFor="reference" className="text-sm text-text-secondary">
+                Referencia
+              </label>
+              <button
+                type="button"
+                onClick={() => setSearchModalOpen(true)}
+                className="text-sm text-accent"
+              >
+                Buscar versículo
+              </button>
+            </div>
             <input
               id="reference"
               type="text"
@@ -209,19 +178,6 @@ export default function VerseFormModal({ mode, initialValues, existingVerse, onC
               className="bg-bg-elevated-2 border border-border-subtle rounded px-3 py-2 text-text-primary focus:outline-none focus:border-accent"
             />
           </div>
-
-          <div className="flex items-center justify-between gap-4">
-            <BibleVersionToggle />
-            <button
-              type="button"
-              onClick={handleSearch}
-              disabled={searching || !reference.trim()}
-              className="text-sm text-accent disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {searching ? 'Buscando…' : 'Buscar texto'}
-            </button>
-          </div>
-          {searchError && <p className="text-sm text-red-400 -mt-2">{searchError}</p>}
 
           <div className="flex flex-col gap-1">
             <label htmlFor="verseText" className="text-sm text-text-secondary">
@@ -349,6 +305,10 @@ export default function VerseFormModal({ mode, initialValues, existingVerse, onC
           </div>
         </form>
       </div>
+
+      {searchModalOpen && (
+        <VerseSearchModal onInsert={handleSearchSelect} onClose={() => setSearchModalOpen(false)} />
+      )}
     </div>
   )
 }
