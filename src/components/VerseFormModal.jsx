@@ -95,7 +95,7 @@ export default function VerseFormModal({ mode, initialValues, existingVerse, onC
     }
 
     if (parsed.verse == null) {
-      setSearchError('Indicá también el número de versículo (ej. Juan 3:16).')
+      setSearchError('Indica también el número de versículo (ej. Juan 3:16).')
       return
     }
 
@@ -273,7 +273,7 @@ export default function VerseFormModal({ mode, initialValues, existingVerse, onC
               value={tagInput}
               onChange={(event) => setTagInput(event.target.value)}
               onKeyDown={handleTagInputKeyDown}
-              placeholder="Escribí y presioná Enter"
+              placeholder="Escribe y presiona Enter"
               className="bg-bg-elevated-2 border border-border-subtle rounded px-3 py-2 text-text-primary focus:outline-none focus:border-accent"
             />
             {tagSuggestions.length > 0 && (

@@ -70,9 +70,9 @@ export default function RegisterPage() {
           </button>
         </form>
         <p className="text-sm text-text-secondary text-center mt-4">
-          ¿Ya tenés cuenta?{' '}
+          ¿Ya tienes cuenta?{' '}
           <Link to="/login" className="text-accent hover:underline">
-            Iniciá sesión
+            Inicia sesión
           </Link>
         </p>
       </div>

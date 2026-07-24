@@ -47,7 +47,7 @@ export default function OracionPage() {
             value={content}
             onChange={(event) => setContent(event.target.value)}
             rows={3}
-            placeholder="Escribí tu petición…"
+            placeholder="Escribe tu petición…"
             className="bg-bg-elevated-2 border border-border-subtle rounded px-3 py-2 text-text-primary focus:outline-none focus:border-accent"
           />
           <button
@@ -66,15 +66,15 @@ export default function OracionPage() {
 
       {isError && (
         <p className="text-sm text-red-400">
-          No pudimos cargar tus peticiones. Intentá recargar la página.
+          No pudimos cargar tus peticiones. Intenta recargar la página.
         </p>
       )}
 
       {isLoading && <SkeletonList count={2} />}
 
       {!isLoading && !isError && requests.length === 0 && (
-        <EmptyState title="Empezá a llevar tus oraciones">
-          Anotá aquello por lo que querés orar. Cuando una petición sea respondida vas a poder
+        <EmptyState title="Empieza a llevar tus oraciones">
+          Anota aquello por lo que quieres orar. Cuando una petición sea respondida vas a poder
           marcarla y guardarla como recuerdo.
         </EmptyState>
       )}

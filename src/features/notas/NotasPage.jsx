@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useStudyNotes } from '../../hooks/useStudyNotes'
 import StudyNoteDetailModal from '../../components/StudyNoteDetailModal'
+import VerseFormModal from '../../components/VerseFormModal'
 import EmptyState from '../../components/EmptyState'
 import { SkeletonList } from '../../components/Skeleton'
 import { stripHtml } from '../../lib/stripHtml'
@@ -16,6 +17,7 @@ function excerpt(html, length = 160) {
 export default function NotasPage() {
   const { notes, isLoading, isError, remove, deleteError } = useStudyNotes()
   const [detailNote, setDetailNote] = useState(null)
+  const [verseToEdit, setVerseToEdit] = useState(null)
 
   return (
     <div className="flex flex-col gap-6">
@@ -33,7 +35,7 @@ export default function NotasPage() {
 
       {isError && (
         <p className="text-sm text-red-400">
-          No pudimos cargar tus notas. Intentá recargar la página.
+          No pudimos cargar tus notas. Intenta recargar la página.
         </p>
       )}
 
@@ -43,8 +45,8 @@ export default function NotasPage() {
 
       {!isLoading && !isError && notes.length === 0 && (
         <EmptyState title="Todavía no hay notas">
-          Guardá lo que aprendas de cada prédica o estudio. Podés añadir el pasaje relacionado e
-          insertar versículos dentro de la nota.
+          Guarda lo que aprendas de cada prédica o estudio. Puedes vincularla a un versículo
+          guardado e insertar otros dentro de la nota.
         </EmptyState>
       )}
 
@@ -58,6 +60,11 @@ export default function NotasPage() {
           >
             <p className="text-sm text-text-muted mb-1">{formatLongDate(note.note_date)}</p>
             <p className="font-voice text-text-primary mb-1">{note.title}</p>
+            {note.saved_verses && (
+              <span className="inline-block mb-2 text-xs rounded-full bg-accent/10 text-accent px-2 py-1">
+                {note.saved_verses.reference}
+              </span>
+            )}
             <p className="text-sm text-text-secondary">{excerpt(note.content)}</p>
           </button>
         ))}
@@ -71,6 +78,18 @@ export default function NotasPage() {
             remove(detailNote.id)
             setDetailNote(null)
           }}
+          onOpenVerse={(verse) => {
+            setDetailNote(null)
+            setVerseToEdit(verse)
+          }}
+        />
+      )}
+
+      {verseToEdit && (
+        <VerseFormModal
+          mode="edit"
+          existingVerse={verseToEdit}
+          onClose={() => setVerseToEdit(null)}
         />
       )}
     </div>

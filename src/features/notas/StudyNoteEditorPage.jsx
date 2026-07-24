@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import NotebookEditor from '../../components/NotebookEditor'
+import VerseLinkPicker from '../../components/VerseLinkPicker'
 import { useStudyNotes } from '../../hooks/useStudyNotes'
 import { toLocalDateString } from '../../lib/date'
 import { describeSupabaseError } from '../../lib/errors'
@@ -12,7 +13,7 @@ function StudyNoteForm({ mode, existingNote }) {
     existingNote?.note_date ?? toLocalDateString(new Date())
   )
   const [title, setTitle] = useState(existingNote?.title ?? '')
-  const [passage, setPassage] = useState(existingNote?.passage ?? '')
+  const [linkedVerseId, setLinkedVerseId] = useState(existingNote?.linked_verse_id ?? null)
   const [content, setContent] = useState(existingNote?.content ?? '')
   const [formError, setFormError] = useState('')
 
@@ -24,7 +25,7 @@ function StudyNoteForm({ mode, existingNote }) {
         id: existingNote?.id,
         noteDate,
         title: title.trim(),
-        passage: passage.trim() || null,
+        linkedVerseId,
         content,
       },
       {
@@ -84,18 +85,11 @@ function StudyNoteForm({ mode, existingNote }) {
           />
         </div>
 
-        <div className="flex flex-col gap-1 max-w-md">
-          <label htmlFor="passage" className="text-sm text-text-secondary">
-            Pasaje relacionado
+        <div className="flex flex-col gap-1">
+          <label className="text-sm text-text-secondary">
+            Vincular a un versículo <span className="text-text-muted">(opcional)</span>
           </label>
-          <input
-            id="passage"
-            type="text"
-            placeholder="Opcional"
-            value={passage}
-            onChange={(event) => setPassage(event.target.value)}
-            className="bg-bg-elevated-2 border border-border-subtle rounded px-3 py-2 text-text-primary focus:outline-none focus:border-accent"
-          />
+          <VerseLinkPicker value={linkedVerseId} onSelect={setLinkedVerseId} />
         </div>
 
         <div className="flex flex-col gap-1">
@@ -156,7 +150,7 @@ export default function StudyNoteEditorPage() {
   if (isError) {
     return (
       <p className="text-sm text-red-400">
-        No pudimos cargar tus notas. Intentá recargar la página.
+        No pudimos cargar tus notas. Intenta recargar la página.
       </p>
     )
   }

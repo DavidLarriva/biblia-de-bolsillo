@@ -43,7 +43,7 @@ export function buscar(version, query) {
 export function describeBibleError(error) {
   if (error instanceof BibleApiError) {
     if (error.status === null) {
-      return 'No hay conexión con el servidor. Revisá tu internet e intentá de nuevo.'
+      return 'No hay conexión con el servidor. Revisa tu internet e intenta de nuevo.'
     }
     if (error.status === 400) {
       return error.message || 'La búsqueda no es válida.'
@@ -53,5 +53,5 @@ export function describeBibleError(error) {
     }
     return error.message || 'No se pudo obtener el texto ahora.'
   }
-  return 'Ocurrió un error inesperado. Intentá de nuevo.'
+  return 'Ocurrió un error inesperado. Intenta de nuevo.'
 }

@@ -119,7 +119,7 @@ export default function VerseSearchModal({ onInsert, onClose }) {
 
         {truncated && (
           <p className="text-xs text-text-muted mt-3">
-            Mostrando los primeros {MAX_RESULTS} resultados. Afiná la búsqueda para ver menos.
+            Mostrando los primeros {MAX_RESULTS} resultados. Afina la búsqueda para ver menos.
           </p>
         )}
 

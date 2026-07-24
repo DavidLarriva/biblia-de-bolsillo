@@ -128,7 +128,7 @@ export default function JournalEntryEditorPage() {
   if (isError) {
     return (
       <p className="text-sm text-red-400">
-        No pudimos cargar tu diario. Intentá recargar la página.
+        No pudimos cargar tu diario. Intenta recargar la página.
       </p>
     )
   }

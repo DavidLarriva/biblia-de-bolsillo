@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { formatLongDate } from '../lib/date'
 
-export default function StudyNoteDetailModal({ note, onClose, onDelete }) {
+export default function StudyNoteDetailModal({ note, onClose, onDelete, onOpenVerse }) {
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center p-4">
       <button
@@ -13,7 +13,16 @@ export default function StudyNoteDetailModal({ note, onClose, onDelete }) {
       <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto bg-bg-elevated rounded-xl p-6">
         <p className="text-sm text-text-muted mb-1">{formatLongDate(note.note_date)}</p>
         <h2 className="font-voice text-xl text-text-primary mb-1">{note.title}</h2>
-        {note.passage && <p className="text-sm text-accent mb-4">{note.passage}</p>}
+
+        {note.saved_verses && (
+          <button
+            type="button"
+            onClick={() => onOpenVerse(note.saved_verses)}
+            className="inline-block mb-4 text-xs rounded-full bg-accent/10 text-accent px-2 py-1"
+          >
+            {note.saved_verses.reference}
+          </button>
+        )}
 
         <div
           className="font-voice text-text-primary leading-relaxed"

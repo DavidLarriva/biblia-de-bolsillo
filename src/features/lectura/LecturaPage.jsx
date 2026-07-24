@@ -84,7 +84,7 @@ function ChapterText({ book, chapter }) {
 
       {isError && (
         <p className="text-sm text-red-400">
-          {errorMessage} Podés seguir marcando el capítulo como leído.
+          {errorMessage} Puedes seguir marcando el capítulo como leído.
         </p>
       )}
 
@@ -230,7 +230,7 @@ export default function LecturaPage() {
   if (booksError) {
     return (
       <p className="text-sm text-red-400">
-        No pudimos cargar la lista de libros. Intentá recargar la página.
+        No pudimos cargar la lista de libros. Intenta recargar la página.
       </p>
     )
   }

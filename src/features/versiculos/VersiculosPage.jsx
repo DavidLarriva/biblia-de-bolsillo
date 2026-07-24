@@ -163,13 +163,13 @@ export default function VersiculosPage() {
 
       {versesQuery.isError && (
         <p className="text-sm text-red-400">
-          No pudimos cargar tus versículos. Intentá recargar la página.
+          No pudimos cargar tus versículos. Intenta recargar la página.
         </p>
       )}
 
       {!versesQuery.isLoading && !versesQuery.isError && !hasAnyVerses && (
-        <EmptyState title="Guardá tu primer versículo">
-          Los pasajes que quieras atesorar o memorizar van a vivir acá. Tocá «+ nuevo» para empezar.
+        <EmptyState title="Guarda tu primer versículo">
+          Los pasajes que quieras atesorar o memorizar van a vivir acá. Toca «+ nuevo» para empezar.
         </EmptyState>
       )}
 

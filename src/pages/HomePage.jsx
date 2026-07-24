@@ -28,7 +28,7 @@ export default function HomePage() {
   if (isError || !data) {
     return (
       <p className="text-sm text-red-400">
-        No pudimos cargar tu panel. Intentá recargar la página.
+        No pudimos cargar tu panel. Intenta recargar la página.
       </p>
     )
   }

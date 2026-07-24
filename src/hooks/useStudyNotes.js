@@ -16,7 +16,7 @@ export function useStudyNotes() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('study_notes')
-        .select('*')
+        .select('*, saved_verses(*)')
         .eq('user_id', user.id)
         .order('note_date', { ascending: false })
         .order('created_at', { ascending: false })
@@ -31,8 +31,8 @@ export function useStudyNotes() {
   }
 
   const saveMutation = useMutation({
-    mutationFn: async ({ id, noteDate, title, passage, content }) => {
-      const payload = { note_date: noteDate, title, passage, content }
+    mutationFn: async ({ id, noteDate, title, linkedVerseId, content }) => {
+      const payload = { note_date: noteDate, title, linked_verse_id: linkedVerseId, content }
 
       if (id) {
         const { error } = await supabase.from('study_notes').update(payload).eq('id', id)

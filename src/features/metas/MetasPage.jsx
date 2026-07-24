@@ -92,7 +92,7 @@ export default function MetasPage() {
 
       {isError && (
         <p className="text-sm text-red-400">
-          No pudimos cargar tus metas. Intentá recargar la página.
+          No pudimos cargar tus metas. Intenta recargar la página.
         </p>
       )}
 
@@ -101,7 +101,7 @@ export default function MetasPage() {
       {!isLoading && !isError && !hasAnyGoals && (
         <EmptyState title="Poné tu primera meta">
           Un propósito espiritual concreto —leer un libro, memorizar un salmo, orar cada mañana—
-          empieza acá. Tocá «+ nueva meta».
+          empieza acá. Toca «+ nueva meta».
         </EmptyState>
       )}
 

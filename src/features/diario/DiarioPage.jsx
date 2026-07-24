@@ -27,7 +27,7 @@ export default function DiarioPage() {
 
       {isError && (
         <p className="text-sm text-red-400">
-          No pudimos cargar tu diario. Intentá recargar la página.
+          No pudimos cargar tu diario. Intenta recargar la página.
         </p>
       )}
 
@@ -37,7 +37,7 @@ export default function DiarioPage() {
 
       {!isLoading && !isError && entries.length === 0 && (
         <EmptyState title="Tu diario está esperando">
-          Escribí tu primera entrada cuando quieras: una oración, un aprendizaje o lo que Dios puso
+          Escribe tu primera entrada cuando quieras: una oración, un aprendizaje o lo que Dios puso
           en tu corazón hoy.
         </EmptyState>
       )}
