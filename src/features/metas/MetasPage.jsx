@@ -99,7 +99,7 @@ export default function MetasPage() {
       {isLoading && <SkeletonList count={3} />}
 
       {!isLoading && !isError && !hasAnyGoals && (
-        <EmptyState title="Poné tu primera meta">
+        <EmptyState title="Pon tu primera meta">
           Un propósito espiritual concreto —leer un libro, memorizar un salmo, orar cada mañana—
           empieza acá. Toca «+ nueva meta».
         </EmptyState>
