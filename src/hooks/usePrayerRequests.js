@@ -41,11 +41,23 @@ export function usePrayerRequests() {
     onSuccess: invalidateAll,
   })
 
+  const updateContentMutation = useMutation({
+    mutationFn: async ({ id, content }) => {
+      const { error } = await supabase.from('prayer_requests').update({ content }).eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: invalidateAll,
+  })
+
   const markAnsweredMutation = useMutation({
-    mutationFn: async (id) => {
+    mutationFn: async ({ id, answerNote }) => {
       const { error } = await supabase
         .from('prayer_requests')
-        .update({ status: 'respondida', answered_at: new Date().toISOString() })
+        .update({
+          status: 'respondida',
+          answered_at: new Date().toISOString(),
+          answer_note: answerNote || null,
+        })
         .eq('id', id)
       if (error) throw error
     },
@@ -66,9 +78,16 @@ export function usePrayerRequests() {
     isError: query.isError,
     create: createMutation.mutate,
     isCreating: createMutation.isPending,
+    updateContent: updateContentMutation.mutate,
+    isUpdatingContent: updateContentMutation.isPending,
     markAnswered: markAnsweredMutation.mutate,
+    isMarkingAnswered: markAnsweredMutation.isPending,
     remove: deleteMutation.mutate,
     actionError:
-      createMutation.error || markAnsweredMutation.error || deleteMutation.error || null,
+      createMutation.error ||
+      updateContentMutation.error ||
+      markAnsweredMutation.error ||
+      deleteMutation.error ||
+      null,
   }
 }
