@@ -31,8 +31,14 @@ export function useStudyNotes() {
   }
 
   const saveMutation = useMutation({
-    mutationFn: async ({ id, noteDate, title, linkedVerseId, content }) => {
-      const payload = { note_date: noteDate, title, linked_verse_id: linkedVerseId, content }
+    mutationFn: async ({ id, noteDate, title, linkedVerseId, content, tags }) => {
+      const payload = {
+        note_date: noteDate,
+        title,
+        linked_verse_id: linkedVerseId,
+        content,
+        tags: tags ?? [],
+      }
 
       if (id) {
         const { error } = await supabase.from('study_notes').update(payload).eq('id', id)

@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react'
 import { usePrayerRequests } from '../../hooks/usePrayerRequests'
 import AnswerPrayerModal from '../../components/AnswerPrayerModal'
+import VerseSearchModal from '../../components/VerseSearchModal'
+import TagInput from '../../components/TagInput'
 import EmptyState from '../../components/EmptyState'
 import { SkeletonList } from '../../components/Skeleton'
 import { describeSupabaseError } from '../../lib/errors'
@@ -25,19 +27,32 @@ function formatAnsweredAfter(request) {
   return `Respondida después de ${days} ${days === 1 ? 'día' : 'días'}`
 }
 
-function PrayerCard({ request, onUpdateContent, onDelete, onMarkAnswered, isUpdatingContent }) {
+function insertVerseIntoText(current, { referencia, texto }) {
+  const quote = `"${texto}" (${referencia})`
+  return current.trim() ? `${current}\n\n${quote}` : quote
+}
+
+function PrayerCard({ request, allTags, onUpdate, onDelete, onMarkAnswered, isUpdating }) {
   const [isEditing, setIsEditing] = useState(false)
   const [draft, setDraft] = useState(request.content)
+  const [draftTags, setDraftTags] = useState(request.tags ?? [])
+  const [verseModalOpen, setVerseModalOpen] = useState(false)
 
   function startEdit() {
     setDraft(request.content)
+    setDraftTags(request.tags ?? [])
     setIsEditing(true)
   }
 
   function handleSave() {
     const trimmed = draft.trim()
     if (!trimmed) return
-    onUpdateContent(trimmed, { onSuccess: () => setIsEditing(false) })
+    onUpdate({ content: trimmed, tags: draftTags }, { onSuccess: () => setIsEditing(false) })
+  }
+
+  function handleInsertVerse({ referencia, texto }) {
+    setDraft((prev) => insertVerseIntoText(prev, { referencia, texto }))
+    setVerseModalOpen(false)
   }
 
   return (
@@ -45,21 +60,47 @@ function PrayerCard({ request, onUpdateContent, onDelete, onMarkAnswered, isUpda
       <p className="text-xs text-text-muted">{formatDate(request.created_at)}</p>
 
       {isEditing ? (
-        <textarea
-          value={draft}
-          onChange={(event) => setDraft(event.target.value)}
-          rows={3}
-          className="bg-bg-elevated-2 border border-border-subtle rounded px-3 py-2 text-text-primary focus:outline-none focus:border-accent"
-        />
+        <div className="flex flex-col gap-3">
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setVerseModalOpen(true)}
+              className="absolute top-2 right-2 text-xs text-text-muted hover:text-accent z-10"
+            >
+              Insertar versículo
+            </button>
+            <textarea
+              value={draft}
+              onChange={(event) => setDraft(event.target.value)}
+              rows={3}
+              className="w-full pt-8 bg-bg-elevated-2 border border-border-subtle rounded px-3 py-2 text-text-primary focus:outline-none focus:border-accent"
+            />
+          </div>
+          <TagInput tags={draftTags} onChange={setDraftTags} suggestions={allTags} />
+        </div>
       ) : (
-        <p className="text-text-primary">{request.content}</p>
+        <>
+          <p className="text-text-primary whitespace-pre-line">{request.content}</p>
+          {request.tags?.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {request.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="text-xs rounded-full bg-bg-elevated-2 text-text-secondary px-2 py-1"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       {request.status === 'respondida' && (
         <>
           <p className="text-xs text-text-muted">{formatAnsweredAfter(request)}</p>
           {request.answer_note && (
-            <p className="font-voice italic text-text-primary border-l-2 border-accent pl-3">
+            <p className="font-voice italic text-text-primary border-l-2 border-accent pl-3 whitespace-pre-line">
               {request.answer_note}
             </p>
           )}
@@ -72,10 +113,10 @@ function PrayerCard({ request, onUpdateContent, onDelete, onMarkAnswered, isUpda
             <button
               type="button"
               onClick={handleSave}
-              disabled={isUpdatingContent || !draft.trim()}
+              disabled={isUpdating || !draft.trim()}
               className="text-sm text-accent disabled:opacity-50"
             >
-              {isUpdatingContent ? 'Guardando…' : 'Guardar'}
+              {isUpdating ? 'Guardando…' : 'Guardar'}
             </button>
             <button
               type="button"
@@ -105,6 +146,10 @@ function PrayerCard({ request, onUpdateContent, onDelete, onMarkAnswered, isUpda
           </>
         )}
       </div>
+
+      {verseModalOpen && (
+        <VerseSearchModal onInsert={handleInsertVerse} onClose={() => setVerseModalOpen(false)} />
+      )}
     </div>
   )
 }
@@ -124,20 +169,51 @@ export default function OracionPage() {
     actionError,
   } = usePrayerRequests()
   const [content, setContent] = useState('')
+  const [tags, setTags] = useState([])
+  const [verseModalOpen, setVerseModalOpen] = useState(false)
   const [answeringId, setAnsweringId] = useState(null)
+  const [tagFilter, setTagFilter] = useState('')
 
-  const pendientes = useMemo(() => requests.filter((r) => r.status === 'pendiente'), [requests])
+  const allTags = useMemo(() => {
+    const all = requests.flatMap((r) => r.tags ?? [])
+    return [...new Set(all)].sort()
+  }, [requests])
+
+  const pendientes = useMemo(() => {
+    return requests.filter((r) => {
+      if (r.status !== 'pendiente') return false
+      if (tagFilter && !(r.tags ?? []).includes(tagFilter)) return false
+      return true
+    })
+  }, [requests, tagFilter])
 
   const respondidas = useMemo(() => {
     return requests
-      .filter((r) => r.status === 'respondida')
+      .filter((r) => {
+        if (r.status !== 'respondida') return false
+        if (tagFilter && !(r.tags ?? []).includes(tagFilter)) return false
+        return true
+      })
       .sort((a, b) => new Date(b.answered_at) - new Date(a.answered_at))
-  }, [requests])
+  }, [requests, tagFilter])
 
   function handleSubmit(event) {
     event.preventDefault()
     if (!content.trim()) return
-    create(content.trim(), { onSuccess: () => setContent('') })
+    create(
+      { content: content.trim(), tags },
+      {
+        onSuccess: () => {
+          setContent('')
+          setTags([])
+        },
+      }
+    )
+  }
+
+  function handleInsertVerse({ referencia, texto }) {
+    setContent((prev) => insertVerseIntoText(prev, { referencia, texto }))
+    setVerseModalOpen(false)
   }
 
   function handleConfirmAnswer(answerNote) {
@@ -148,14 +224,24 @@ export default function OracionPage() {
     <div className="flex flex-col gap-8">
       <div>
         <h1 className="font-voice text-lg text-text-primary mb-3">Oración</h1>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-2 bg-bg-elevated rounded-xl p-4">
-          <textarea
-            value={content}
-            onChange={(event) => setContent(event.target.value)}
-            rows={3}
-            placeholder="Escribe tu petición…"
-            className="bg-bg-elevated-2 border border-border-subtle rounded px-3 py-2 text-text-primary focus:outline-none focus:border-accent"
-          />
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3 bg-bg-elevated rounded-xl p-4">
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setVerseModalOpen(true)}
+              className="absolute top-2 right-2 text-xs text-text-muted hover:text-accent z-10"
+            >
+              Insertar versículo
+            </button>
+            <textarea
+              value={content}
+              onChange={(event) => setContent(event.target.value)}
+              rows={3}
+              placeholder="Escribe tu petición…"
+              className="w-full pt-8 bg-bg-elevated-2 border border-border-subtle rounded px-3 py-2 text-text-primary focus:outline-none focus:border-accent"
+            />
+          </div>
+          <TagInput tags={tags} onChange={setTags} suggestions={allTags} />
           <button
             type="submit"
             disabled={isCreating || !content.trim()}
@@ -185,6 +271,23 @@ export default function OracionPage() {
 
       {!isLoading && requests.length > 0 && (
         <>
+          {allTags.length > 0 && (
+            <div className="flex items-center gap-2 text-sm">
+              <select
+                value={tagFilter}
+                onChange={(event) => setTagFilter(event.target.value)}
+                className="bg-bg-elevated border border-border-subtle rounded px-2 py-1 text-text-secondary text-sm"
+              >
+                <option value="">Todas las etiquetas</option>
+                {allTags.map((tag) => (
+                  <option key={tag} value={tag}>
+                    {tag}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           <section>
             <h2 className="text-sm text-text-secondary mb-3">Pendientes</h2>
             {pendientes.length === 0 && (
@@ -197,12 +300,11 @@ export default function OracionPage() {
                 <PrayerCard
                   key={request.id}
                   request={request}
-                  onUpdateContent={(newContent, opts) =>
-                    updateContent({ id: request.id, content: newContent }, opts)
-                  }
+                  allTags={allTags}
+                  onUpdate={(payload, opts) => updateContent({ id: request.id, ...payload }, opts)}
                   onDelete={() => remove(request.id)}
                   onMarkAnswered={() => setAnsweringId(request.id)}
-                  isUpdatingContent={isUpdatingContent}
+                  isUpdating={isUpdatingContent}
                 />
               ))}
             </div>
@@ -220,16 +322,19 @@ export default function OracionPage() {
                 <PrayerCard
                   key={request.id}
                   request={request}
-                  onUpdateContent={(newContent, opts) =>
-                    updateContent({ id: request.id, content: newContent }, opts)
-                  }
+                  allTags={allTags}
+                  onUpdate={(payload, opts) => updateContent({ id: request.id, ...payload }, opts)}
                   onDelete={() => remove(request.id)}
-                  isUpdatingContent={isUpdatingContent}
+                  isUpdating={isUpdatingContent}
                 />
               ))}
             </div>
           </section>
         </>
+      )}
+
+      {verseModalOpen && (
+        <VerseSearchModal onInsert={handleInsertVerse} onClose={() => setVerseModalOpen(false)} />
       )}
 
       {answeringId && (

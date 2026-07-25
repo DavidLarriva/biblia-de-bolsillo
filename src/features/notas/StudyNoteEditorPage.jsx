@@ -1,12 +1,13 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import NotebookEditor from '../../components/NotebookEditor'
 import VerseLinkPicker from '../../components/VerseLinkPicker'
+import TagInput from '../../components/TagInput'
 import { useStudyNotes } from '../../hooks/useStudyNotes'
 import { toLocalDateString } from '../../lib/date'
 import { describeSupabaseError } from '../../lib/errors'
 
-function StudyNoteForm({ mode, existingNote }) {
+function StudyNoteForm({ mode, existingNote, existingTags }) {
   const navigate = useNavigate()
   const { save, remove, isSaving, isDeleting } = useStudyNotes()
   const [noteDate, setNoteDate] = useState(
@@ -15,6 +16,7 @@ function StudyNoteForm({ mode, existingNote }) {
   const [title, setTitle] = useState(existingNote?.title ?? '')
   const [linkedVerseId, setLinkedVerseId] = useState(existingNote?.linked_verse_id ?? null)
   const [content, setContent] = useState(existingNote?.content ?? '')
+  const [tags, setTags] = useState(existingNote?.tags ?? [])
   const [formError, setFormError] = useState('')
 
   function handleSubmit(event) {
@@ -27,6 +29,7 @@ function StudyNoteForm({ mode, existingNote }) {
         title: title.trim(),
         linkedVerseId,
         content,
+        tags,
       },
       {
         onSuccess: () => navigate('/notas'),
@@ -93,6 +96,13 @@ function StudyNoteForm({ mode, existingNote }) {
         </div>
 
         <div className="flex flex-col gap-1">
+          <label className="text-sm text-text-secondary">
+            Etiquetas <span className="text-text-muted">(opcional)</span>
+          </label>
+          <TagInput tags={tags} onChange={setTags} suggestions={existingTags} />
+        </div>
+
+        <div className="flex flex-col gap-1">
           <label className="text-sm text-text-secondary">Contenido</label>
           <NotebookEditor value={content} onChange={setContent} />
         </div>
@@ -139,8 +149,13 @@ export default function StudyNoteEditorPage() {
   const { id } = useParams()
   const { notes, isLoading, isError } = useStudyNotes()
 
+  const existingTags = useMemo(() => {
+    const all = notes.flatMap((n) => n.tags ?? [])
+    return [...new Set(all)].sort()
+  }, [notes])
+
   if (!id) {
-    return <StudyNoteForm mode="create" />
+    return <StudyNoteForm mode="create" existingTags={existingTags} />
   }
 
   if (isLoading) {
@@ -161,5 +176,5 @@ export default function StudyNoteEditorPage() {
     return <p className="text-text-secondary">No encontramos esa nota.</p>
   }
 
-  return <StudyNoteForm mode="edit" existingNote={existingNote} />
+  return <StudyNoteForm mode="edit" existingNote={existingNote} existingTags={existingTags} />
 }

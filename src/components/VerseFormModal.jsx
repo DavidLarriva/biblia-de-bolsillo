@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../context/AuthContext'
 import VerseSearchModal from './VerseSearchModal'
+import TagInput from './TagInput'
 
 const MEMORIZE_STATUSES = [
   { value: 'en_proceso', label: 'En proceso' },
@@ -24,7 +25,6 @@ export default function VerseFormModal({ mode, initialValues, existingVerse, onC
   )
   const [notes, setNotes] = useState(existingVerse?.notes ?? '')
   const [tags, setTags] = useState(existingVerse?.tags ?? [])
-  const [tagInput, setTagInput] = useState('')
   const [isMemorizing, setIsMemorizing] = useState(existingVerse?.is_memorizing ?? false)
   const [memorizeStatus, setMemorizeStatus] = useState(
     existingVerse?.memorize_status ?? 'en_proceso'
@@ -50,32 +50,6 @@ export default function VerseFormModal({ mode, initialValues, existingVerse, onC
     const all = (tagsQuery.data ?? []).flatMap((v) => v.tags ?? [])
     return [...new Set(all)].sort()
   }, [tagsQuery.data])
-
-  const tagSuggestions = useMemo(() => {
-    const input = tagInput.trim().toLowerCase()
-    if (!input) return []
-    return existingTags.filter(
-      (tag) => tag.toLowerCase().includes(input) && !tags.includes(tag)
-    )
-  }, [existingTags, tagInput, tags])
-
-  function addTag(tag) {
-    const clean = tag.trim()
-    if (!clean || tags.includes(clean)) return
-    setTags([...tags, clean])
-    setTagInput('')
-  }
-
-  function removeTag(tag) {
-    setTags(tags.filter((t) => t !== tag))
-  }
-
-  function handleTagInputKeyDown(event) {
-    if (event.key === 'Enter' || event.key === ',') {
-      event.preventDefault()
-      addTag(tagInput)
-    }
-  }
 
   function handleSearchSelect({ referencia, texto, version }) {
     setReference(referencia)
@@ -206,46 +180,8 @@ export default function VerseFormModal({ mode, initialValues, existingVerse, onC
           </div>
 
           <div className="flex flex-col gap-1">
-            <label htmlFor="tagInput" className="text-sm text-text-secondary">
-              Etiquetas
-            </label>
-            {tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-1">
-                {tags.map((tag) => (
-                  <button
-                    key={tag}
-                    type="button"
-                    onClick={() => removeTag(tag)}
-                    className="text-xs rounded-full bg-bg-elevated-2 text-text-secondary px-2 py-1"
-                  >
-                    {tag} ×
-                  </button>
-                ))}
-              </div>
-            )}
-            <input
-              id="tagInput"
-              type="text"
-              value={tagInput}
-              onChange={(event) => setTagInput(event.target.value)}
-              onKeyDown={handleTagInputKeyDown}
-              placeholder="Escribe y presiona Enter"
-              className="bg-bg-elevated-2 border border-border-subtle rounded px-3 py-2 text-text-primary focus:outline-none focus:border-accent"
-            />
-            {tagSuggestions.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-1">
-                {tagSuggestions.map((tag) => (
-                  <button
-                    key={tag}
-                    type="button"
-                    onClick={() => addTag(tag)}
-                    className="text-xs rounded-full border border-border-subtle text-text-secondary px-2 py-1 hover:text-text-primary"
-                  >
-                    {tag}
-                  </button>
-                ))}
-              </div>
-            )}
+            <label className="text-sm text-text-secondary">Etiquetas</label>
+            <TagInput tags={tags} onChange={setTags} suggestions={existingTags} />
           </div>
 
           <label className="flex items-center gap-2 text-sm text-text-secondary">

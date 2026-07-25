@@ -31,10 +31,11 @@ export function usePrayerRequests() {
   }
 
   const createMutation = useMutation({
-    mutationFn: async (content) => {
+    mutationFn: async ({ content, tags }) => {
       const { error } = await supabase.from('prayer_requests').insert({
         user_id: user.id,
         content,
+        tags: tags ?? [],
       })
       if (error) throw error
     },
@@ -42,8 +43,11 @@ export function usePrayerRequests() {
   })
 
   const updateContentMutation = useMutation({
-    mutationFn: async ({ id, content }) => {
-      const { error } = await supabase.from('prayer_requests').update({ content }).eq('id', id)
+    mutationFn: async ({ id, content, tags }) => {
+      const { error } = await supabase
+        .from('prayer_requests')
+        .update({ content, tags: tags ?? [] })
+        .eq('id', id)
       if (error) throw error
     },
     onSuccess: invalidateAll,
