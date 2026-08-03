@@ -36,18 +36,25 @@ function PrayerCard({ request, allTags, onUpdate, onDelete, onMarkAnswered, isUp
   const [isEditing, setIsEditing] = useState(false)
   const [draft, setDraft] = useState(request.content)
   const [draftTags, setDraftTags] = useState(request.tags ?? [])
+  const [answerDraft, setAnswerDraft] = useState(request.answer_note ?? '')
   const [verseModalOpen, setVerseModalOpen] = useState(false)
+  const [answerVerseModalOpen, setAnswerVerseModalOpen] = useState(false)
+
+  const respondida = request.status === 'respondida'
 
   function startEdit() {
     setDraft(request.content)
     setDraftTags(request.tags ?? [])
+    setAnswerDraft(request.answer_note ?? '')
     setIsEditing(true)
   }
 
   function handleSave() {
     const trimmed = draft.trim()
     if (!trimmed) return
-    onUpdate({ content: trimmed, tags: draftTags }, { onSuccess: () => setIsEditing(false) })
+    const payload = { content: trimmed, tags: draftTags }
+    if (respondida) payload.answerNote = answerDraft.trim() || null
+    onUpdate(payload, { onSuccess: () => setIsEditing(false) })
   }
 
   function handleInsertVerse({ referencia, texto }) {
@@ -55,8 +62,13 @@ function PrayerCard({ request, allTags, onUpdate, onDelete, onMarkAnswered, isUp
     setVerseModalOpen(false)
   }
 
+  function handleInsertVerseEnRespuesta({ referencia, texto }) {
+    setAnswerDraft((prev) => insertVerseIntoText(prev, { referencia, texto }))
+    setAnswerVerseModalOpen(false)
+  }
+
   return (
-    <div className="bg-bg-elevated rounded-xl p-4 flex flex-col gap-3">
+    <div className="bg-bg-elevated rounded-xl p-4 flex flex-col gap-4">
       <p className="text-xs text-text-muted">{formatDate(request.created_at)}</p>
 
       {isEditing ? (
@@ -96,15 +108,35 @@ function PrayerCard({ request, allTags, onUpdate, onDelete, onMarkAnswered, isUp
         </>
       )}
 
-      {request.status === 'respondida' && request.answer_note && (
-        <div className="flex flex-col gap-1 border-t border-border-subtle pt-3">
+      {respondida && (
+        <div className="flex flex-col gap-2 border-t border-border-subtle pt-4">
           <p className="text-base font-medium text-text-secondary">Respuesta:</p>
-          <p className="text-text-primary whitespace-pre-line">{request.answer_note}</p>
-        </div>
-      )}
 
-      {request.status === 'respondida' && (
-        <p className="text-xs text-text-muted">{formatAnsweredAfter(request)}</p>
+          {isEditing ? (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setAnswerVerseModalOpen(true)}
+                className="absolute top-2 right-2 text-xs text-text-muted hover:text-accent z-10"
+              >
+                Insertar versículo
+              </button>
+              <textarea
+                value={answerDraft}
+                onChange={(event) => setAnswerDraft(event.target.value)}
+                rows={3}
+                placeholder="Opcional"
+                className="w-full pt-8 bg-bg-elevated-2 border border-border-subtle rounded px-3 py-2 text-text-primary focus:outline-none focus:border-accent"
+              />
+            </div>
+          ) : request.answer_note ? (
+            <p className="text-text-primary whitespace-pre-line">{request.answer_note}</p>
+          ) : (
+            <p className="text-sm text-text-muted italic">Sin detalles todavía.</p>
+          )}
+
+          <p className="text-xs text-text-muted">{formatAnsweredAfter(request)}</p>
+        </div>
       )}
 
       <div className="flex items-center gap-4">
@@ -149,6 +181,12 @@ function PrayerCard({ request, allTags, onUpdate, onDelete, onMarkAnswered, isUp
 
       {verseModalOpen && (
         <VerseSearchModal onInsert={handleInsertVerse} onClose={() => setVerseModalOpen(false)} />
+      )}
+      {answerVerseModalOpen && (
+        <VerseSearchModal
+          onInsert={handleInsertVerseEnRespuesta}
+          onClose={() => setAnswerVerseModalOpen(false)}
+        />
       )}
     </div>
   )

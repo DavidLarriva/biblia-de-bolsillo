@@ -43,11 +43,10 @@ export function usePrayerRequests() {
   })
 
   const updateContentMutation = useMutation({
-    mutationFn: async ({ id, content, tags }) => {
-      const { error } = await supabase
-        .from('prayer_requests')
-        .update({ content, tags: tags ?? [] })
-        .eq('id', id)
+    mutationFn: async ({ id, content, tags, answerNote }) => {
+      const payload = { content, tags: tags ?? [] }
+      if (answerNote !== undefined) payload.answer_note = answerNote
+      const { error } = await supabase.from('prayer_requests').update(payload).eq('id', id)
       if (error) throw error
     },
     onSuccess: invalidateAll,
