@@ -97,10 +97,14 @@ function PrayerCard({ request, allTags, onUpdate, onDelete, onMarkAnswered, isUp
       )}
 
       {request.status === 'respondida' && request.answer_note && (
-        <div className="flex flex-col gap-1">
-          <p className="text-sm font-medium text-text-secondary">Respuesta:</p>
+        <div className="flex flex-col gap-1 border-t border-border-subtle pt-3">
+          <p className="text-base font-medium text-text-secondary">Respuesta:</p>
           <p className="text-text-primary whitespace-pre-line">{request.answer_note}</p>
         </div>
+      )}
+
+      {request.status === 'respondida' && (
+        <p className="text-xs text-text-muted">{formatAnsweredAfter(request)}</p>
       )}
 
       <div className="flex items-center gap-4">
@@ -142,10 +146,6 @@ function PrayerCard({ request, allTags, onUpdate, onDelete, onMarkAnswered, isUp
           </>
         )}
       </div>
-
-      {request.status === 'respondida' && (
-        <p className="text-xs text-text-muted">{formatAnsweredAfter(request)}</p>
-      )}
 
       {verseModalOpen && (
         <VerseSearchModal onInsert={handleInsertVerse} onClose={() => setVerseModalOpen(false)} />
