@@ -32,6 +32,14 @@ function NavItems({ onNavigate }) {
   )
 }
 
+function CuentaActiva() {
+  const { user } = useAuth()
+
+  if (!user?.email) return null
+
+  return <p className="px-3 pb-2 text-xs text-text-muted truncate">{user.email}</p>
+}
+
 function SignOutButton({ onSignedOut, className = '' }) {
   const { signOut } = useAuth()
   const navigate = useNavigate()
@@ -66,6 +74,7 @@ export default function AppLayout() {
       <aside className="hidden sm:flex sm:fixed sm:inset-y-0 sm:left-0 sm:w-[220px] sm:flex-col sm:justify-between bg-bg-elevated border-r border-border-subtle py-4">
         <NavItems />
         <div className="px-3">
+          <CuentaActiva />
           <SignOutButton />
         </div>
       </aside>
@@ -105,6 +114,7 @@ export default function AppLayout() {
           >
             <NavItems onNavigate={() => setDrawerOpen(false)} />
             <div className="px-3">
+              <CuentaActiva />
               <SignOutButton onSignedOut={() => setDrawerOpen(false)} />
             </div>
           </aside>

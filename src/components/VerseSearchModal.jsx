@@ -12,7 +12,7 @@ export default function VerseSearchModal({ onInsert, onClose }) {
   const { data: bibleBooksList } = useBibleBooks()
   const { version, setVersion } = useBibleVersion()
 
-  const [libroId, setLibroId] = useState('')
+  const [libroId, setLibroId] = useState(null)
   const [capitulo, setCapitulo] = useState(1)
   const [libroCargado, setLibroCargado] = useState(null)
   const [versiculos, setVersiculos] = useState(null)
@@ -92,7 +92,7 @@ export default function VerseSearchModal({ onInsert, onClose }) {
         <div className="flex gap-2 mb-4">
           <select
             value={libroSeleccionado?.id ?? ''}
-            onChange={(event) => cambiarLibro(event.target.value)}
+            onChange={(event) => cambiarLibro(Number(event.target.value))}
             className="flex-1 min-w-0 bg-bg-elevated-2 border border-border-subtle rounded px-3 py-2 text-text-primary focus:outline-none focus:border-accent"
           >
             {libros.map((libro) => (

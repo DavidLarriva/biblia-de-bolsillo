@@ -100,9 +100,10 @@ function PrayerCard({ request, allTags, onUpdate, onDelete, onMarkAnswered, isUp
         <>
           <p className="text-xs text-text-muted">{formatAnsweredAfter(request)}</p>
           {request.answer_note && (
-            <p className="font-voice italic text-text-primary border-l-2 border-accent pl-3 whitespace-pre-line">
-              {request.answer_note}
-            </p>
+            <div className="bg-bg-elevated-2 rounded-lg p-3">
+              <p className="text-xs text-text-secondary mb-1">Cómo Dios respondió</p>
+              <p className="text-sm text-text-primary whitespace-pre-line">{request.answer_note}</p>
+            </div>
           )}
         </>
       )}
