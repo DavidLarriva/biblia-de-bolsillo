@@ -1,23 +1,19 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useStudyNotes } from '../../hooks/useStudyNotes'
-import StudyNoteDetailModal from '../../components/StudyNoteDetailModal'
-import VerseFormModal from '../../components/VerseFormModal'
 import EmptyState from '../../components/EmptyState'
 import { SkeletonList } from '../../components/Skeleton'
-import { stripHtml } from '../../lib/stripHtml'
+import { limpiarVersiculos } from '../../lib/versiculos'
 import { formatLongDate } from '../../lib/date'
-import { describeSupabaseError } from '../../lib/errors'
 
-function excerpt(html, length = 160) {
-  const text = stripHtml(html)
+function excerpt(texto, length = 160) {
+  const text = limpiarVersiculos(texto)
   return text.length > length ? `${text.slice(0, length)}…` : text
 }
 
 export default function NotasPage() {
-  const { notes, isLoading, isError, remove, deleteError } = useStudyNotes()
-  const [detailNote, setDetailNote] = useState(null)
-  const [verseToEdit, setVerseToEdit] = useState(null)
+  const navigate = useNavigate()
+  const { notes, isLoading, isError } = useStudyNotes()
   const [tagFilter, setTagFilter] = useState('')
 
   const allTags = useMemo(() => {
@@ -66,10 +62,6 @@ export default function NotasPage() {
         </p>
       )}
 
-      {deleteError && (
-        <p className="text-sm text-red-400">{describeSupabaseError(deleteError)}</p>
-      )}
-
       {!isLoading && !isError && notes.length === 0 && (
         <EmptyState title="Todavía no hay notas">
           Guarda lo que aprendas de cada prédica o estudio. Puedes vincularla a un versículo
@@ -86,7 +78,7 @@ export default function NotasPage() {
           <button
             key={note.id}
             type="button"
-            onClick={() => setDetailNote(note)}
+            onClick={() => navigate(`/notas/${note.id}`)}
             className="text-left bg-bg-elevated rounded-xl p-5"
           >
             <p className="text-sm text-text-muted mb-1">{formatLongDate(note.note_date)}</p>
@@ -112,29 +104,6 @@ export default function NotasPage() {
           </button>
         ))}
       </div>
-
-      {detailNote && (
-        <StudyNoteDetailModal
-          note={detailNote}
-          onClose={() => setDetailNote(null)}
-          onDelete={() => {
-            remove(detailNote.id)
-            setDetailNote(null)
-          }}
-          onOpenVerse={(verse) => {
-            setDetailNote(null)
-            setVerseToEdit(verse)
-          }}
-        />
-      )}
-
-      {verseToEdit && (
-        <VerseFormModal
-          mode="edit"
-          existingVerse={verseToEdit}
-          onClose={() => setVerseToEdit(null)}
-        />
-      )}
     </div>
   )
 }

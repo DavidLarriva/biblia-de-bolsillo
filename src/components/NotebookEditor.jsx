@@ -1,119 +1,86 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useEditor, EditorContent } from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
 import VerseSearchModal from './VerseSearchModal'
-
-const VERSION_LABELS = {
-  rvr1960: 'RVR1960',
-  ntv: 'NTV',
-}
+import { VersiculoExtension, textoADoc, docATexto } from '../lib/versiculoNode'
+import { limpiarComillas } from '../lib/versiculos'
 
 export default function NotebookEditor({ value, onChange }) {
-  const editorRef = useRef(null)
-  const savedRangeRef = useRef(null)
-  const [focused, setFocused] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
 
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        bold: false,
+        italic: false,
+        strike: false,
+        code: false,
+        codeBlock: false,
+        heading: false,
+        bulletList: false,
+        orderedList: false,
+        listItem: false,
+        blockquote: false,
+        horizontalRule: false,
+        link: false,
+        underline: false,
+      }),
+      VersiculoExtension,
+    ],
+    content: textoADoc(value ?? ''),
+    immediatelyRender: false,
+    editorProps: {
+      attributes: {
+        class:
+          'font-voice text-text-primary leading-relaxed min-h-[200px] focus:outline-none [&_p]:min-h-[1.5em]',
+      },
+    },
+    onUpdate({ editor: editorInstance }) {
+      onChange(docATexto(editorInstance.getJSON()))
+    },
+  })
+
+  // Si `value` cambia desde afuera (ej. al cargar una entrada existente en
+  // el formulario), se sincroniza el documento sin pisar lo que el usuario
+  // está escribiendo — el mismo patrón que usaba el contentEditable anterior.
   useEffect(() => {
-    const el = editorRef.current
-    if (el && el.innerHTML !== (value ?? '')) {
-      el.innerHTML = value ?? ''
+    if (!editor) return
+    const actual = docATexto(editor.getJSON())
+    if (actual !== (value ?? '')) {
+      editor.commands.setContent(textoADoc(value ?? ''))
     }
-  }, [value])
-
-  function handleInput() {
-    onChange(editorRef.current.innerHTML)
-  }
-
-  function saveSelection() {
-    const selection = window.getSelection()
-    if (selection && selection.rangeCount > 0) {
-      const range = selection.getRangeAt(0)
-      if (editorRef.current.contains(range.commonAncestorContainer)) {
-        savedRangeRef.current = range.cloneRange()
-      }
-    }
-  }
-
-  function openModal() {
-    saveSelection()
-    setModalOpen(true)
-  }
+  }, [value, editor])
 
   function handleInsert({ referencia, texto, version }) {
     setModalOpen(false)
-
-    const editor = editorRef.current
-    editor.focus()
-
-    const selection = window.getSelection()
-    let range = savedRangeRef.current
-
-    if (!range || !editor.contains(range.commonAncestorContainer)) {
-      range = document.createRange()
-      range.selectNodeContents(editor)
-      range.collapse(false)
-    }
-
-    selection.removeAllRanges()
-    selection.addRange(range)
-
-    const versionLabel = VERSION_LABELS[version] ?? version
-
-    const blockquote = document.createElement('blockquote')
-    blockquote.className = 'verse-insert'
-
-    const p = document.createElement('p')
-    p.textContent = `"${texto}"`
-
-    const cite = document.createElement('cite')
-    cite.textContent = `${referencia} — ${versionLabel}`
-
-    blockquote.appendChild(p)
-    blockquote.appendChild(cite)
-
-    range.deleteContents()
-    range.insertNode(blockquote)
-
-    // Un elemento de bloque no ofrece una posición de caret fiable justo
-    // después de sí mismo: sin un nodo de texto real ahí, el navegador
-    // ancla el cursor al último nodo de texto interior (el <cite>).
-    const spacer = document.createTextNode('​')
-    blockquote.after(spacer)
-
-    const newRange = document.createRange()
-    newRange.setStart(spacer, spacer.length)
-    newRange.collapse(true)
-    selection.removeAllRanges()
-    selection.addRange(newRange)
-
-    savedRangeRef.current = null
-    onChange(editor.innerHTML)
+    editor
+      ?.chain()
+      .focus()
+      .insertContent([
+        { type: 'versiculo', attrs: { referencia, texto: limpiarComillas(texto), version } },
+        { type: 'text', text: ' ' },
+      ])
+      .run()
   }
 
   return (
     <div className="relative">
       <button
         type="button"
-        onClick={openModal}
+        onClick={() => setModalOpen(true)}
         className="absolute top-2 right-2 text-xs text-text-muted hover:text-accent z-10"
       >
         Insertar versículo
       </button>
 
       <div
-        ref={editorRef}
-        contentEditable
-        suppressContentEditableWarning
-        onInput={handleInput}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
-        className={`font-voice text-text-primary leading-relaxed min-h-[200px] pt-8 px-1 pb-2 bg-transparent border-b outline-none transition-colors ${
-          focused ? 'border-accent' : 'border-border-subtle'
-        }`}
-      />
+        onClick={() => editor?.chain().focus().run()}
+        className="pt-8 px-1 pb-2 border-b border-border-subtle focus-within:border-accent transition-colors cursor-text"
+      >
+        <EditorContent editor={editor} />
+      </div>
 
-      {modalOpen && (
-        <VerseSearchModal onInsert={handleInsert} onClose={() => setModalOpen(false)} />
-      )}
+      {modalOpen && <VerseSearchModal onInsert={handleInsert} onClose={() => setModalOpen(false)} />}
     </div>
   )
 }

@@ -32,7 +32,7 @@ function StudyNoteForm({ mode, existingNote, existingTags }) {
         tags,
       },
       {
-        onSuccess: () => navigate('/notas'),
+        onSuccess: () => navigate(existingNote ? `/notas/${existingNote.id}` : '/notas'),
         onError: (err) => setFormError(describeSupabaseError(err)),
       }
     )
@@ -51,7 +51,7 @@ function StudyNoteForm({ mode, existingNote, existingTags }) {
       <div className="flex flex-col gap-1">
         <button
           type="button"
-          onClick={() => navigate('/notas')}
+          onClick={() => navigate(existingNote ? `/notas/${existingNote.id}` : '/notas')}
           className="self-start text-sm text-text-secondary hover:text-text-primary"
         >
           ← Volver

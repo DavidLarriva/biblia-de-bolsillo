@@ -10,6 +10,7 @@ import DiarioPage from './features/diario/DiarioPage'
 import JournalEntryEditorPage from './features/diario/JournalEntryEditorPage'
 import OracionPage from './features/oracion/OracionPage'
 import NotasPage from './features/notas/NotasPage'
+import StudyNoteDetailPage from './features/notas/StudyNoteDetailPage'
 import StudyNoteEditorPage from './features/notas/StudyNoteEditorPage'
 import MetasPage from './features/metas/MetasPage'
 
@@ -33,7 +34,8 @@ export const router = createBrowserRouter([
       { path: 'oracion', element: <OracionPage /> },
       { path: 'notas', element: <NotasPage /> },
       { path: 'notas/nueva', element: <StudyNoteEditorPage /> },
-      { path: 'notas/:id', element: <StudyNoteEditorPage /> },
+      { path: 'notas/:id', element: <StudyNoteDetailPage /> },
+      { path: 'notas/:id/editar', element: <StudyNoteEditorPage /> },
       { path: 'metas', element: <MetasPage /> },
     ],
   },

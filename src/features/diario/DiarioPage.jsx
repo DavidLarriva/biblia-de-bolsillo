@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useJournalEntries } from '../../hooks/useJournalEntries'
 import VerseFormModal from '../../components/VerseFormModal'
+import TextoConVersiculos from '../../components/TextoConVersiculos'
 import EmptyState from '../../components/EmptyState'
 import { SkeletonList } from '../../components/Skeleton'
 import { formatLongDate } from '../../lib/date'
@@ -74,9 +75,9 @@ export default function DiarioPage() {
               </button>
             )}
 
-            <div
+            <TextoConVersiculos
+              texto={entry.content}
               className="font-voice text-text-primary leading-relaxed"
-              dangerouslySetInnerHTML={{ __html: entry.content }}
             />
           </div>
         ))}

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useDashboardData, TOTAL_CHAPTERS } from '../hooks/useDashboardData'
-import { stripHtml } from '../lib/stripHtml'
+import { limpiarVersiculos } from '../lib/versiculos'
 import { formatLongDate } from '../lib/date'
 import { Skeleton } from '../components/Skeleton'
 
@@ -45,7 +45,7 @@ export default function HomePage() {
   } = data
 
   const progressPct = Math.min(100, Math.round((chaptersCompleted / TOTAL_CHAPTERS) * 100))
-  const journalPreview = lastJournalEntry ? stripHtml(lastJournalEntry.content) : ''
+  const journalPreview = lastJournalEntry ? limpiarVersiculos(lastJournalEntry.content) : ''
   const journalTruncated = journalPreview.length > 180
 
   return (
