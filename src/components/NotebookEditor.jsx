@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import VerseSearchModal from './VerseSearchModal'
@@ -12,6 +12,10 @@ export default function NotebookEditor({
   minHeightClass = 'min-h-[200px]',
 }) {
   const [modalOpen, setModalOpen] = useState(false)
+  // Recuerda el último texto que el propio editor emitió, para no tener que
+  // volver a serializar todo el documento (docATexto) en cada tecla solo
+  // para compararlo contra `value` — ver efecto de sincronización abajo.
+  const ultimoValorEmitido = useRef(value ?? '')
 
   const editor = useEditor({
     extensions: [
@@ -40,19 +44,23 @@ export default function NotebookEditor({
       },
     },
     onUpdate({ editor: editorInstance }) {
-      onChange(docATexto(editorInstance.getJSON()))
+      const texto = docATexto(editorInstance.getJSON())
+      ultimoValorEmitido.current = texto
+      onChange(texto)
     },
   })
 
   // Si `value` cambia desde afuera (ej. al cargar una entrada existente en
   // el formulario), se sincroniza el documento sin pisar lo que el usuario
-  // está escribiendo — el mismo patrón que usaba el contentEditable anterior.
+  // está escribiendo. Comparamos contra el último valor que el editor mismo
+  // emitió (no contra una nueva serialización del documento actual): así
+  // este efecto no hace trabajo en cada tecla, solo cuando `value` cambió
+  // por una razón ajena al propio editor.
   useEffect(() => {
     if (!editor) return
-    const actual = docATexto(editor.getJSON())
-    if (actual !== (value ?? '')) {
-      editor.commands.setContent(textoADoc(value ?? ''))
-    }
+    if (ultimoValorEmitido.current === (value ?? '')) return
+    ultimoValorEmitido.current = value ?? ''
+    editor.commands.setContent(textoADoc(value ?? ''))
   }, [value, editor])
 
   function handleInsert({ referencia, texto, version }) {

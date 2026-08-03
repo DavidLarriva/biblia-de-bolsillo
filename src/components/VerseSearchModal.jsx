@@ -1,6 +1,8 @@
 import { useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useBibleBooks } from '../hooks/useBibleBooks'
 import { useBibleVersion } from '../hooks/useBibleVersion'
+import { bibleChapterQueryKey } from '../hooks/useBibleChapter'
 import { obtenerCapitulo, describeBibleError } from '../lib/bibleApi'
 
 const VERSIONES = [
@@ -11,6 +13,7 @@ const VERSIONES = [
 export default function VerseSearchModal({ onInsert, onClose }) {
   const { data: bibleBooksList } = useBibleBooks()
   const { version, setVersion } = useBibleVersion()
+  const queryClient = useQueryClient()
 
   const [libroId, setLibroId] = useState(null)
   const [capituloInput, setCapituloInput] = useState('1')
@@ -50,7 +53,14 @@ export default function VerseSearchModal({ onInsert, onClose }) {
     setVersiculos(null)
 
     try {
-      const datos = await obtenerCapitulo(version, libroSeleccionado.usfm_code, capitulo)
+      // El texto bíblico es estático: se cachea por versión/libro/capítulo
+      // para no repetir la llamada a la API externa cada vez que se abre
+      // este panel y se pide el mismo capítulo (comparte caché con Lectura).
+      const datos = await queryClient.fetchQuery({
+        queryKey: bibleChapterQueryKey(version, libroSeleccionado.usfm_code, capitulo),
+        queryFn: () => obtenerCapitulo(version, libroSeleccionado.usfm_code, capitulo),
+        staleTime: Infinity,
+      })
       setLibroCargado(datos.libro)
       setVersiculos(datos.versiculos)
     } catch (err) {

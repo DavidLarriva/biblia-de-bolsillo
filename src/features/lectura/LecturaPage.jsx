@@ -16,6 +16,7 @@ const TESTAMENT_LABELS = {
 
 const ACCENT_COLOR = '#C9A66B'
 const BG_ELEVATED_2_COLOR = '#202020'
+const EMPTY_PROGRESS = []
 
 function TestamentProgressBar({ label, read, total }) {
   const pct = total > 0 ? (read / total) * 100 : 0
@@ -195,9 +196,17 @@ export default function LecturaPage() {
     return totals
   }, [books, progress])
 
-  function progressForBook(bookId) {
-    return progress.filter((p) => p.book_id === bookId)
-  }
+  // Antes se hacía progress.filter(...) por cada uno de los 66 libros en
+  // cada render (O(libros × progreso)). Agruparlo una sola vez es O(progreso).
+  const progressByBook = useMemo(() => {
+    const map = new Map()
+    for (const entry of progress) {
+      const list = map.get(entry.book_id)
+      if (list) list.push(entry)
+      else map.set(entry.book_id, [entry])
+    }
+    return map
+  }, [progress])
 
   function handleToggleChapter(bookId, chapter, isMarked) {
     toggle({ bookId, chapter, isMarked })
@@ -243,7 +252,7 @@ export default function LecturaPage() {
                 <BookRow
                   key={book.id}
                   book={book}
-                  bookProgress={progressForBook(book.id)}
+                  bookProgress={progressByBook.get(book.id) ?? EMPTY_PROGRESS}
                   onToggleChapter={handleToggleChapter}
                 />
               ))}

@@ -100,12 +100,19 @@ function normalizarContenido(texto) {
 // la app, sin tener que migrar lo ya guardado.
 const REGEX_CITA_ENTRE_COMILLAS = /"([^"\n]+)"\s*\(([^()\n]+)\)/g
 
+// Cualquier "texto" (paréntesis) que NO sea una referencia bíblica real
+// (ej. una petición como "te amo" (después de la iglesia)) se deja intacta:
+// el paréntesis debe terminar en un número de capítulo, opcionalmente
+// seguido de ":versículo", como en "Juan 3:16" o "Salmos 23".
+const PARECE_REFERENCIA = /^[0-9]?\s*[A-ZÁÉÍÓÚÑ][\wÁÉÍÓÚÑáéíóúñ.]*(?:\s+[\wÁÉÍÓÚÑáéíóúñ.]+)*\s+\d+(?::\d+)?$/
+
 export function convertirCitasEntreComillas(texto) {
   if (!texto) return ''
-  return texto.replace(
-    REGEX_CITA_ENTRE_COMILLAS,
-    (_match, cita, referencia) => `[[${referencia.trim()} | ${cita.trim()}]]`
-  )
+  return texto.replace(REGEX_CITA_ENTRE_COMILLAS, (match, cita, referenciaCruda) => {
+    const referencia = referenciaCruda.trim()
+    if (!PARECE_REFERENCIA.test(referencia)) return match
+    return `[[${referencia} | ${cita.trim()}]]`
+  })
 }
 
 function crearRegex() {
@@ -146,6 +153,20 @@ export function limpiarVersiculos(texto) {
     .map((segmento) => (segmento.tipo === 'texto' ? segmento.valor : segmento.texto || segmento.referencia))
     .join('')
     .replace(/\s+/g, ' ')
+    .trim()
+}
+
+// Convierte el texto con tokens [[...]] en texto plano legible para
+// compartir (Web Share API / portapapeles), citando el versículo con su
+// referencia entre paréntesis en vez de mostrar el token o la tarjeta.
+export function formatearParaCompartir(texto) {
+  return parsearSegmentos(texto)
+    .map((segmento) => {
+      if (segmento.tipo === 'texto') return segmento.valor
+      const cita = segmento.texto ? `"${segmento.texto}" ` : ''
+      return `${cita}(${segmento.referencia})`
+    })
+    .join('')
     .trim()
 }
 

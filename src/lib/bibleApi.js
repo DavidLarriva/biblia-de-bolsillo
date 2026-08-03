@@ -34,10 +34,6 @@ export function obtenerCapitulo(version, libroUsfm, capitulo) {
   return request(`/api/${version}/${libroUsfm}/${capitulo}`)
 }
 
-export function buscar(version, query) {
-  return request(`/api/${version}/buscar?q=${encodeURIComponent(query)}`)
-}
-
 // Traduce un error de la API de la Biblia a un mensaje breve para el usuario,
 // distinguiendo fallos de red (status null) de respuestas 400/404 del servidor.
 export function describeBibleError(error) {

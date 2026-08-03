@@ -3,10 +3,12 @@ import { usePrayerRequests } from '../../hooks/usePrayerRequests'
 import AnswerPrayerModal from '../../components/AnswerPrayerModal'
 import NotebookEditor from '../../components/NotebookEditor'
 import TextoConVersiculos from '../../components/TextoConVersiculos'
+import ShareButton from '../../components/ShareButton'
 import TagInput from '../../components/TagInput'
 import EmptyState from '../../components/EmptyState'
 import { SkeletonList } from '../../components/Skeleton'
-import { convertirCitasEntreComillas } from '../../lib/versiculos'
+import { convertirCitasEntreComillas, formatearParaCompartir } from '../../lib/versiculos'
+import { toLocalDateString } from '../../lib/date'
 import { describeSupabaseError } from '../../lib/errors'
 
 function formatDate(isoString) {
@@ -17,16 +19,35 @@ function formatDate(isoString) {
   })
 }
 
+// Diferencia en días de calendario (no en horas transcurridas): una petición
+// creada a las 23:50 y respondida a las 00:10 del día siguiente son fechas
+// distintas pero casi el mismo instante, y viceversa —creada a las 00:05 y
+// respondida a las 23:55 del MISMO día son ~24h de diferencia pero deberían
+// contar como "el mismo día". Comparar timestamps crudos con Math.round
+// daba resultados incorrectos en ese segundo caso.
 function daysBetween(startIso, endIso) {
-  const start = new Date(startIso)
-  const end = new Date(endIso)
-  return Math.round((end - start) / (1000 * 60 * 60 * 24))
+  const dayMs = 24 * 60 * 60 * 1000
+  const toUTCTimestamp = (dateStr) => {
+    const [y, m, d] = dateStr.split('-').map(Number)
+    return Date.UTC(y, m - 1, d)
+  }
+  const start = toUTCTimestamp(toLocalDateString(new Date(startIso)))
+  const end = toUTCTimestamp(toLocalDateString(new Date(endIso)))
+  return Math.round((end - start) / dayMs)
 }
 
 function formatAnsweredAfter(request) {
   const days = daysBetween(request.created_at, request.answered_at)
   if (days <= 0) return 'Respondida el mismo día'
   return `Respondida después de ${days} ${days === 1 ? 'día' : 'días'}`
+}
+
+function formatearPeticionParaCompartir(request) {
+  const partes = [formatearParaCompartir(convertirCitasEntreComillas(request.content))]
+  if (request.status === 'respondida' && request.answer_note) {
+    partes.push(`Respuesta: ${formatearParaCompartir(convertirCitasEntreComillas(request.answer_note))}`)
+  }
+  return partes.join('\n\n')
 }
 
 function PrayerCard({ request, allTags, onUpdate, onDelete, onMarkAnswered, isUpdating }) {
@@ -111,9 +132,9 @@ function PrayerCard({ request, allTags, onUpdate, onDelete, onMarkAnswered, isUp
         </div>
       )}
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center justify-between gap-4">
         {isEditing ? (
-          <>
+          <div className="flex items-center gap-4">
             <button
               type="button"
               onClick={handleSave}
@@ -129,24 +150,27 @@ function PrayerCard({ request, allTags, onUpdate, onDelete, onMarkAnswered, isUp
             >
               Cancelar
             </button>
-          </>
+          </div>
         ) : (
           <>
-            {request.status === 'pendiente' && (
-              <button type="button" onClick={onMarkAnswered} className="text-sm text-accent">
-                Marcar como respondida
+            <div className="flex items-center gap-4">
+              {request.status === 'pendiente' && (
+                <button type="button" onClick={onMarkAnswered} className="text-sm text-accent">
+                  Marcar como respondida
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={startEdit}
+                className="text-sm text-text-secondary hover:text-text-primary"
+              >
+                Editar
               </button>
-            )}
-            <button
-              type="button"
-              onClick={startEdit}
-              className="text-sm text-text-secondary hover:text-text-primary"
-            >
-              Editar
-            </button>
-            <button type="button" onClick={onDelete} className="text-sm text-red-400">
-              Eliminar
-            </button>
+              <button type="button" onClick={onDelete} className="text-sm text-red-400">
+                Eliminar
+              </button>
+            </div>
+            <ShareButton title="Oración" text={formatearPeticionParaCompartir(request)} />
           </>
         )}
       </div>

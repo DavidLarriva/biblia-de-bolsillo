@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
@@ -122,7 +122,9 @@ export default function AppLayout() {
       )}
 
       <main className="sm:ml-[220px] p-4 sm:p-8">
-        <Outlet />
+        <Suspense fallback={<p className="text-text-secondary">Cargando…</p>}>
+          <Outlet />
+        </Suspense>
       </main>
     </div>
   )

@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabaseClient'
 import { useAuth } from '../../context/AuthContext'
 import VerseFormModal from '../../components/VerseFormModal'
+import ShareButton from '../../components/ShareButton'
 import EmptyState from '../../components/EmptyState'
 import { SkeletonList } from '../../components/Skeleton'
 
@@ -17,46 +18,53 @@ const VERSION_LABELS = {
   ntv: 'NTV',
 }
 
+function formatearVersiculoParaCompartir(verse) {
+  const cita = verse.verse_text ? `"${verse.verse_text}" ` : ''
+  return `${cita}(${verse.reference})`
+}
+
 function VerseCard({ verse, onClick }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="w-full text-left bg-bg-elevated rounded-xl p-5 flex flex-col gap-2"
-    >
-      <div className="flex items-center justify-between gap-3">
-        <p className="font-voice text-text-primary">{verse.reference}</p>
-        {verse.bible_version && (
-          <span className="text-xs text-text-muted shrink-0">
-            {VERSION_LABELS[verse.bible_version] ?? verse.bible_version}
-          </span>
-        )}
-      </div>
-
-      {verse.verse_text && (
-        <p className="font-voice text-text-primary">{verse.verse_text}</p>
-      )}
-
-      {verse.notes && <p className="text-sm text-text-secondary">{verse.notes}</p>}
-
-      {(verse.tags?.length > 0 || verse.memorize_status) && (
-        <div className="flex flex-wrap items-center gap-2 mt-1">
-          {verse.tags?.map((tag) => (
-            <span
-              key={tag}
-              className="text-xs rounded-full bg-bg-elevated-2 text-text-secondary px-2 py-1"
-            >
-              {tag}
-            </span>
-          ))}
-          {verse.memorize_status && (
-            <span className="text-xs rounded-full bg-accent/10 text-accent px-2 py-1">
-              {verse.memorize_status === 'memorizado' ? 'Memorizado' : 'En proceso'}
+    <div className="bg-bg-elevated rounded-xl p-5 flex flex-col gap-2">
+      <button type="button" onClick={onClick} className="w-full text-left flex flex-col gap-2">
+        <div className="flex items-center justify-between gap-3">
+          <p className="font-voice text-text-primary">{verse.reference}</p>
+          {verse.bible_version && (
+            <span className="text-xs text-text-muted shrink-0">
+              {VERSION_LABELS[verse.bible_version] ?? verse.bible_version}
             </span>
           )}
         </div>
-      )}
-    </button>
+
+        {verse.verse_text && (
+          <p className="font-voice text-text-primary">{verse.verse_text}</p>
+        )}
+
+        {verse.notes && <p className="text-sm text-text-secondary">{verse.notes}</p>}
+
+        {(verse.tags?.length > 0 || verse.memorize_status) && (
+          <div className="flex flex-wrap items-center gap-2 mt-1">
+            {verse.tags?.map((tag) => (
+              <span
+                key={tag}
+                className="text-xs rounded-full bg-bg-elevated-2 text-text-secondary px-2 py-1"
+              >
+                {tag}
+              </span>
+            ))}
+            {verse.memorize_status && (
+              <span className="text-xs rounded-full bg-accent/10 text-accent px-2 py-1">
+                {verse.memorize_status === 'memorizado' ? 'Memorizado' : 'En proceso'}
+              </span>
+            )}
+          </div>
+        )}
+      </button>
+
+      <div className="flex justify-end">
+        <ShareButton title={verse.reference} text={formatearVersiculoParaCompartir(verse)} />
+      </div>
+    </div>
   )
 }
 

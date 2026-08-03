@@ -3,7 +3,9 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useStudyNotes } from '../../hooks/useStudyNotes'
 import TextoConVersiculos from '../../components/TextoConVersiculos'
 import VerseFormModal from '../../components/VerseFormModal'
+import ShareButton from '../../components/ShareButton'
 import { formatLongDate } from '../../lib/date'
+import { formatearParaCompartir } from '../../lib/versiculos'
 import { describeSupabaseError } from '../../lib/errors'
 
 export default function StudyNoteDetailPage() {
@@ -83,9 +85,15 @@ export default function StudyNoteDetailPage() {
         <button type="button" onClick={handleDelete} className="text-sm text-red-400">
           Eliminar
         </button>
-        <Link to={`/notas/${note.id}/editar`} className="text-sm text-accent">
-          Editar
-        </Link>
+        <div className="flex items-center gap-4">
+          <ShareButton
+            title={note.title}
+            text={`${note.title}\n\n${formatearParaCompartir(note.content)}`}
+          />
+          <Link to={`/notas/${note.id}/editar`} className="text-sm text-accent">
+            Editar
+          </Link>
+        </div>
       </div>
 
       {verseToEdit && (
