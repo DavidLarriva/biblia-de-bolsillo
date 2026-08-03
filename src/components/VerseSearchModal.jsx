@@ -13,7 +13,7 @@ export default function VerseSearchModal({ onInsert, onClose }) {
   const { version, setVersion } = useBibleVersion()
 
   const [libroId, setLibroId] = useState(null)
-  const [capitulo, setCapitulo] = useState(1)
+  const [capituloInput, setCapituloInput] = useState('1')
   const [libroCargado, setLibroCargado] = useState(null)
   const [versiculos, setVersiculos] = useState(null)
   const [cargando, setCargando] = useState(false)
@@ -21,22 +21,30 @@ export default function VerseSearchModal({ onInsert, onClose }) {
 
   const libros = bibleBooksList ?? []
   const libroSeleccionado = libros.find((libro) => libro.id === libroId) ?? libros[0]
+  const maxCapitulo = libroSeleccionado?.chapters_count ?? 150
+  // El campo permite escribir libremente (incluso vacío mientras se borra);
+  // el número efectivo se recorta solo al usarlo, no en cada tecla.
+  const capitulo = Math.min(Math.max(1, Number(capituloInput) || 1), maxCapitulo)
 
   function cambiarLibro(id) {
     setLibroId(id)
-    setCapitulo(1)
+    setCapituloInput('1')
     setVersiculos(null)
     setLibroCargado(null)
   }
 
-  function cambiarCapitulo(valor) {
-    const max = libroSeleccionado?.chapters_count ?? 150
-    setCapitulo(Math.min(Math.max(1, valor || 1), max))
+  function cambiarCapituloInput(valor) {
+    setCapituloInput(valor.replace(/[^0-9]/g, ''))
+  }
+
+  function normalizarCapituloInput() {
+    setCapituloInput(String(capitulo))
   }
 
   async function handleCargar() {
     if (!libroSeleccionado) return
 
+    normalizarCapituloInput()
     setCargando(true)
     setError('')
     setVersiculos(null)
@@ -102,11 +110,12 @@ export default function VerseSearchModal({ onInsert, onClose }) {
             ))}
           </select>
           <input
-            type="number"
-            min={1}
-            max={libroSeleccionado?.chapters_count ?? 150}
-            value={capitulo}
-            onChange={(event) => cambiarCapitulo(Number(event.target.value))}
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            value={capituloInput}
+            onChange={(event) => cambiarCapituloInput(event.target.value)}
+            onBlur={normalizarCapituloInput}
             className="w-16 bg-bg-elevated-2 border border-border-subtle rounded px-3 py-2 text-text-primary focus:outline-none focus:border-accent"
           />
           <button
