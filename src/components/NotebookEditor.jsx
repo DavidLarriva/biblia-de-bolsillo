@@ -5,7 +5,12 @@ import VerseSearchModal from './VerseSearchModal'
 import { VersiculoExtension, textoADoc, docATexto } from '../lib/versiculoNode'
 import { limpiarComillas } from '../lib/versiculos'
 
-export default function NotebookEditor({ value, onChange }) {
+export default function NotebookEditor({
+  value,
+  onChange,
+  editorClassName = 'font-voice text-text-primary leading-relaxed',
+  minHeightClass = 'min-h-[200px]',
+}) {
   const [modalOpen, setModalOpen] = useState(false)
 
   const editor = useEditor({
@@ -31,8 +36,7 @@ export default function NotebookEditor({ value, onChange }) {
     immediatelyRender: false,
     editorProps: {
       attributes: {
-        class:
-          'font-voice text-text-primary leading-relaxed min-h-[200px] focus:outline-none [&_p]:min-h-[1.5em]',
+        class: `${editorClassName} ${minHeightClass} focus:outline-none [&_p]:min-h-[1.5em]`,
       },
     },
     onUpdate({ editor: editorInstance }) {

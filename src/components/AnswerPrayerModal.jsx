@@ -1,20 +1,12 @@
 import { useState } from 'react'
-import VerseSearchModal from './VerseSearchModal'
+import NotebookEditor from './NotebookEditor'
 
 export default function AnswerPrayerModal({ onConfirm, onClose, isSaving }) {
   const [answerNote, setAnswerNote] = useState('')
-  const [verseModalOpen, setVerseModalOpen] = useState(false)
 
   function handleSubmit(event) {
     event.preventDefault()
     onConfirm(answerNote.trim() || null)
-  }
-
-  function handleInsertVerse({ referencia, texto }) {
-    setAnswerNote((prev) =>
-      prev.trim() ? `${prev}\n\n"${texto}" (${referencia})` : `"${texto}" (${referencia})`
-    )
-    setVerseModalOpen(false)
   }
 
   return (
@@ -32,22 +24,12 @@ export default function AnswerPrayerModal({ onConfirm, onClose, isSaving }) {
         </p>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setVerseModalOpen(true)}
-              className="absolute top-2 right-2 text-xs text-text-muted hover:text-accent z-10"
-            >
-              Insertar versículo
-            </button>
-            <textarea
-              value={answerNote}
-              onChange={(event) => setAnswerNote(event.target.value)}
-              rows={4}
-              placeholder="Opcional"
-              className="w-full pt-8 bg-bg-elevated-2 border border-border-subtle rounded px-3 py-2 text-text-primary focus:outline-none focus:border-accent"
-            />
-          </div>
+          <NotebookEditor
+            value={answerNote}
+            onChange={setAnswerNote}
+            editorClassName="text-text-primary leading-relaxed"
+            minHeightClass="min-h-[4.5rem]"
+          />
 
           <div className="flex items-center justify-end gap-3">
             <button type="button" onClick={onClose} className="text-sm text-text-secondary">
@@ -63,10 +45,6 @@ export default function AnswerPrayerModal({ onConfirm, onClose, isSaving }) {
           </div>
         </form>
       </div>
-
-      {verseModalOpen && (
-        <VerseSearchModal onInsert={handleInsertVerse} onClose={() => setVerseModalOpen(false)} />
-      )}
     </div>
   )
 }

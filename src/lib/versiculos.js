@@ -93,6 +93,21 @@ function normalizarContenido(texto) {
   return pareceHtml(texto) ? convertirContenidoAntiguo(texto) : texto
 }
 
+// Formato antiguo usado en Oración antes de tener versículos embebidos:
+// la cita se insertaba como prosa con comillas y la referencia entre
+// paréntesis, ej. "Texto del versículo" (Juan 3:16). Se convierte al vuelo
+// al formato [[Referencia | Texto]] para que se vea igual que el resto de
+// la app, sin tener que migrar lo ya guardado.
+const REGEX_CITA_ENTRE_COMILLAS = /"([^"\n]+)"\s*\(([^()\n]+)\)/g
+
+export function convertirCitasEntreComillas(texto) {
+  if (!texto) return ''
+  return texto.replace(
+    REGEX_CITA_ENTRE_COMILLAS,
+    (_match, cita, referencia) => `[[${referencia.trim()} | ${cita.trim()}]]`
+  )
+}
+
 function crearRegex() {
   return /\[\[\s*([^|\]]+?)\s*(?:\|\s*([^|\]]*)\s*(?:\|\s*([^\]]*)\s*)?)?\]\]/g
 }

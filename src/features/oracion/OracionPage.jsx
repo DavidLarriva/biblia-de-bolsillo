@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react'
 import { usePrayerRequests } from '../../hooks/usePrayerRequests'
 import AnswerPrayerModal from '../../components/AnswerPrayerModal'
-import VerseSearchModal from '../../components/VerseSearchModal'
+import NotebookEditor from '../../components/NotebookEditor'
+import TextoConVersiculos from '../../components/TextoConVersiculos'
 import TagInput from '../../components/TagInput'
 import EmptyState from '../../components/EmptyState'
 import { SkeletonList } from '../../components/Skeleton'
+import { convertirCitasEntreComillas } from '../../lib/versiculos'
 import { describeSupabaseError } from '../../lib/errors'
 
 function formatDate(isoString) {
@@ -27,25 +29,18 @@ function formatAnsweredAfter(request) {
   return `Respondida después de ${days} ${days === 1 ? 'día' : 'días'}`
 }
 
-function insertVerseIntoText(current, { referencia, texto }) {
-  const quote = `"${texto}" (${referencia})`
-  return current.trim() ? `${current}\n\n${quote}` : quote
-}
-
 function PrayerCard({ request, allTags, onUpdate, onDelete, onMarkAnswered, isUpdating }) {
   const [isEditing, setIsEditing] = useState(false)
-  const [draft, setDraft] = useState(request.content)
+  const [draft, setDraft] = useState(convertirCitasEntreComillas(request.content))
   const [draftTags, setDraftTags] = useState(request.tags ?? [])
-  const [answerDraft, setAnswerDraft] = useState(request.answer_note ?? '')
-  const [verseModalOpen, setVerseModalOpen] = useState(false)
-  const [answerVerseModalOpen, setAnswerVerseModalOpen] = useState(false)
+  const [answerDraft, setAnswerDraft] = useState(convertirCitasEntreComillas(request.answer_note))
 
   const respondida = request.status === 'respondida'
 
   function startEdit() {
-    setDraft(request.content)
+    setDraft(convertirCitasEntreComillas(request.content))
     setDraftTags(request.tags ?? [])
-    setAnswerDraft(request.answer_note ?? '')
+    setAnswerDraft(convertirCitasEntreComillas(request.answer_note))
     setIsEditing(true)
   }
 
@@ -57,42 +52,26 @@ function PrayerCard({ request, allTags, onUpdate, onDelete, onMarkAnswered, isUp
     onUpdate(payload, { onSuccess: () => setIsEditing(false) })
   }
 
-  function handleInsertVerse({ referencia, texto }) {
-    setDraft((prev) => insertVerseIntoText(prev, { referencia, texto }))
-    setVerseModalOpen(false)
-  }
-
-  function handleInsertVerseEnRespuesta({ referencia, texto }) {
-    setAnswerDraft((prev) => insertVerseIntoText(prev, { referencia, texto }))
-    setAnswerVerseModalOpen(false)
-  }
-
   return (
     <div className="bg-bg-elevated rounded-xl p-4 flex flex-col gap-4">
       <p className="text-xs text-text-muted">{formatDate(request.created_at)}</p>
 
       {isEditing ? (
         <div className="flex flex-col gap-3">
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setVerseModalOpen(true)}
-              className="absolute top-2 right-2 text-xs text-text-muted hover:text-accent z-10"
-            >
-              Insertar versículo
-            </button>
-            <textarea
-              value={draft}
-              onChange={(event) => setDraft(event.target.value)}
-              rows={3}
-              className="w-full pt-8 bg-bg-elevated-2 border border-border-subtle rounded px-3 py-2 text-text-primary focus:outline-none focus:border-accent"
-            />
-          </div>
+          <NotebookEditor
+            value={draft}
+            onChange={setDraft}
+            editorClassName="text-text-primary leading-relaxed"
+            minHeightClass="min-h-[4.5rem]"
+          />
           <TagInput tags={draftTags} onChange={setDraftTags} suggestions={allTags} />
         </div>
       ) : (
         <>
-          <p className="text-text-primary whitespace-pre-line">{request.content}</p>
+          <TextoConVersiculos
+            texto={convertirCitasEntreComillas(request.content)}
+            className="text-text-primary"
+          />
           {request.tags?.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {request.tags.map((tag) => (
@@ -113,24 +92,17 @@ function PrayerCard({ request, allTags, onUpdate, onDelete, onMarkAnswered, isUp
           <p className="text-base font-medium text-text-secondary">Respuesta:</p>
 
           {isEditing ? (
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setAnswerVerseModalOpen(true)}
-                className="absolute top-2 right-2 text-xs text-text-muted hover:text-accent z-10"
-              >
-                Insertar versículo
-              </button>
-              <textarea
-                value={answerDraft}
-                onChange={(event) => setAnswerDraft(event.target.value)}
-                rows={3}
-                placeholder="Opcional"
-                className="w-full pt-8 bg-bg-elevated-2 border border-border-subtle rounded px-3 py-2 text-text-primary focus:outline-none focus:border-accent"
-              />
-            </div>
+            <NotebookEditor
+              value={answerDraft}
+              onChange={setAnswerDraft}
+              editorClassName="text-text-primary leading-relaxed"
+              minHeightClass="min-h-[4.5rem]"
+            />
           ) : request.answer_note ? (
-            <p className="text-text-primary whitespace-pre-line">{request.answer_note}</p>
+            <TextoConVersiculos
+              texto={convertirCitasEntreComillas(request.answer_note)}
+              className="text-text-primary"
+            />
           ) : (
             <p className="text-sm text-text-muted italic">Sin detalles todavía.</p>
           )}
@@ -178,16 +150,6 @@ function PrayerCard({ request, allTags, onUpdate, onDelete, onMarkAnswered, isUp
           </>
         )}
       </div>
-
-      {verseModalOpen && (
-        <VerseSearchModal onInsert={handleInsertVerse} onClose={() => setVerseModalOpen(false)} />
-      )}
-      {answerVerseModalOpen && (
-        <VerseSearchModal
-          onInsert={handleInsertVerseEnRespuesta}
-          onClose={() => setAnswerVerseModalOpen(false)}
-        />
-      )}
     </div>
   )
 }
@@ -208,7 +170,6 @@ export default function OracionPage() {
   } = usePrayerRequests()
   const [content, setContent] = useState('')
   const [tags, setTags] = useState([])
-  const [verseModalOpen, setVerseModalOpen] = useState(false)
   const [answeringId, setAnsweringId] = useState(null)
   const [tagFilter, setTagFilter] = useState('')
 
@@ -249,11 +210,6 @@ export default function OracionPage() {
     )
   }
 
-  function handleInsertVerse({ referencia, texto }) {
-    setContent((prev) => insertVerseIntoText(prev, { referencia, texto }))
-    setVerseModalOpen(false)
-  }
-
   function handleConfirmAnswer(answerNote) {
     markAnswered({ id: answeringId, answerNote }, { onSuccess: () => setAnsweringId(null) })
   }
@@ -263,22 +219,12 @@ export default function OracionPage() {
       <div>
         <h1 className="font-voice text-lg text-text-primary mb-3">Oración</h1>
         <form onSubmit={handleSubmit} className="flex flex-col gap-3 bg-bg-elevated rounded-xl p-4">
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setVerseModalOpen(true)}
-              className="absolute top-2 right-2 text-xs text-text-muted hover:text-accent z-10"
-            >
-              Insertar versículo
-            </button>
-            <textarea
-              value={content}
-              onChange={(event) => setContent(event.target.value)}
-              rows={3}
-              placeholder="Escribe tu petición…"
-              className="w-full pt-8 bg-bg-elevated-2 border border-border-subtle rounded px-3 py-2 text-text-primary focus:outline-none focus:border-accent"
-            />
-          </div>
+          <NotebookEditor
+            value={content}
+            onChange={setContent}
+            editorClassName="text-text-primary leading-relaxed"
+            minHeightClass="min-h-[4.5rem]"
+          />
           <TagInput tags={tags} onChange={setTags} suggestions={allTags} />
           <button
             type="submit"
@@ -369,10 +315,6 @@ export default function OracionPage() {
             </div>
           </section>
         </>
-      )}
-
-      {verseModalOpen && (
-        <VerseSearchModal onInsert={handleInsertVerse} onClose={() => setVerseModalOpen(false)} />
       )}
 
       {answeringId && (
