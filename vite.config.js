@@ -47,7 +47,10 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
+        // Se agrega json para precachear las dos versiones completas de la
+        // Biblia (public/biblia/**) — así "Lectura" funciona sin conexión
+        // desde la primera instalación, no solo capítulo por capítulo.
+        globPatterns: ['**/*.{js,css,html,svg,png,ico,json}'],
       },
     }),
   ],

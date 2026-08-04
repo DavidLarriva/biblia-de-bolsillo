@@ -1,4 +1,8 @@
-const BASE_URL = import.meta.env.VITE_BIBLE_API_URL
+// El texto bíblico ya no se pide a una API externa: vive como archivos
+// JSON estáticos en public/biblia/{version}/{usfm}/{capitulo}.json
+// (generados una sola vez con scripts/generar-biblia.mjs), servidos desde
+// el propio dominio de la app y cacheados por el service worker (PWA) para
+// funcionar sin conexión.
 
 export class BibleApiError extends Error {
   constructor(message, status) {
@@ -8,41 +12,28 @@ export class BibleApiError extends Error {
   }
 }
 
-async function request(path) {
+export async function obtenerCapitulo(version, libroUsfm, capitulo) {
   let response
   try {
-    response = await fetch(`${BASE_URL}${path}`)
+    response = await fetch(`/biblia/${version}/${libroUsfm}/${capitulo}.json`)
   } catch {
-    throw new BibleApiError('No se pudo conectar con el servidor', null)
+    throw new BibleApiError('No se pudo cargar el texto. Revisa tu conexión.', null)
   }
 
   if (!response.ok) {
-    let message = 'Ocurrió un error inesperado'
-    try {
-      const body = await response.json()
-      if (body?.error) message = body.error
-    } catch {
-      // el cuerpo no era JSON válido, se usa el mensaje por defecto
-    }
-    throw new BibleApiError(message, response.status)
+    throw new BibleApiError('No encontramos ese pasaje.', response.status)
   }
 
   return response.json()
 }
 
-export function obtenerCapitulo(version, libroUsfm, capitulo) {
-  return request(`/api/${version}/${libroUsfm}/${capitulo}`)
-}
-
-// Traduce un error de la API de la Biblia a un mensaje breve para el usuario,
-// distinguiendo fallos de red (status null) de respuestas 400/404 del servidor.
+// Traduce un error al leer el texto bíblico a un mensaje breve para el
+// usuario, distinguiendo un fallo de red (status null, ej. sin conexión y
+// el capítulo aún no se guardó en el dispositivo) de un pasaje inexistente.
 export function describeBibleError(error) {
   if (error instanceof BibleApiError) {
     if (error.status === null) {
-      return 'No hay conexión con el servidor. Revisa tu internet e intenta de nuevo.'
-    }
-    if (error.status === 400) {
-      return error.message || 'La búsqueda no es válida.'
+      return 'No hay conexión y este capítulo todavía no se guardó en tu dispositivo.'
     }
     if (error.status === 404) {
       return error.message || 'No encontramos ese pasaje.'

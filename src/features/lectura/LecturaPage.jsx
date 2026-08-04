@@ -3,7 +3,7 @@ import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from 'recharts'
 import { useBibleBooks } from '../../hooks/useBibleBooks'
 import { useReadingProgress } from '../../hooks/useReadingProgress'
 import { useBibleVersion } from '../../hooks/useBibleVersion'
-import { useChapterText } from '../../hooks/useChapterText'
+import { useBibleChapter } from '../../hooks/useBibleChapter'
 import BibleVersionToggle from '../../components/BibleVersionToggle'
 import { SkeletonList } from '../../components/Skeleton'
 import { BibleApiError, describeBibleError } from '../../lib/bibleApi'
@@ -62,7 +62,7 @@ function getHighlightedChapter(bookProgress) {
 
 function ChapterText({ book, chapter }) {
   const { version } = useBibleVersion()
-  const { data, isLoading, isError, error } = useChapterText(version, book.usfm_code, chapter)
+  const { data, isLoading, isError, error } = useBibleChapter(version, book.usfm_code, chapter)
 
   // Distingue un fallo de red (BibleApiError con status null) de una respuesta
   // 400/404 del servidor; en ambos casos se puede seguir marcando la lectura.
@@ -89,7 +89,7 @@ function ChapterText({ book, chapter }) {
 
       {data && (
         <div className="flex flex-col gap-2">
-          {data.map((verso) => (
+          {data.versiculos.map((verso) => (
             <p key={verso.versiculo} className="font-voice text-text-primary leading-relaxed">
               <span className="text-text-muted text-sm mr-2">{verso.versiculo}</span>
               {verso.texto}
