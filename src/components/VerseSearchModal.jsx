@@ -12,7 +12,14 @@ const VERSIONES = [
 
 export default function VerseSearchModal({ onInsert, onClose }) {
   const { data: bibleBooksList } = useBibleBooks()
-  const { version, setVersion } = useBibleVersion()
+  // La versión de este panel es independiente de la preferencia de Lectura:
+  // se inicializa con esa preferencia por comodidad, pero cambiarla acá es
+  // instantáneo (estado local) y no dispara una escritura a Supabase — antes
+  // usaba useBibleVersion() directo, y ese round-trip a la base de datos
+  // hacía que el toggle pareciera "no funcionar" mientras la mutación
+  // estaba en curso (o si fallaba, sin ningún aviso).
+  const { version: versionPreferida } = useBibleVersion()
+  const [version, setVersion] = useState(versionPreferida)
   const queryClient = useQueryClient()
 
   const [libroId, setLibroId] = useState(null)
